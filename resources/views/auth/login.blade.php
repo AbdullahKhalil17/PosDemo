@@ -61,6 +61,19 @@
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
+
+                                <div class="section-field mb-20">
+                                    <label class="mb-10" for="store_id">الفرع* </label>
+                                    <select name="store_id" id="store_id" class="custom-select">
+                                      <option value="">اختر الفرع</option>
+                                      @foreach ($stores as $item)
+                                        <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                      @endforeach
+                                    </select>
+                                    @error('store_id')
+                                        <span class="text-danger">{{ $message }}</span>
+                                    @enderror
+                                </div>
                                 
                                 <button class="button" type="submit"><span>تسجيل الدخول</span><i
                                         class="fa fa-check"></i></button>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Models\Stores;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -10,7 +11,8 @@ class AuthController extends Controller
 {
     public function index()
     {
-      return view('auth.login');
+      $stores = Stores::select('id', 'name')->get();
+      return view('auth.login', compact('stores'));
     }
 
     public function login(Request $request)
