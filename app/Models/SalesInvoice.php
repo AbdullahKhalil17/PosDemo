@@ -5,31 +5,24 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PurchaseInvoice extends Model
+class SalesInvoice extends Model
 {
     use HasFactory;
 
-    protected $table = 'purchase_invoice';
+  protected $table = 'sales_invoice';
 
     protected $fillable = [
-        'store_id',
         'user_id',
-        'supplier_name',
+        'store_id',
         'invoice_number',
         'invoice_date',
-        'total_amount',
-        'status',
-        'notes',
+        'total_invoice',
+        'note',
     ];
 
     public function details()
     {
-        return $this->hasMany(PurchaseInvoiceDetails::class);
-    }
-
-    public function store()
-    {
-        return $this->belongsTo(Stores::class);
+        return $this->hasMany(SalesInvoiceDetails::class, 'invoice_id');
     }
 
     public function user()

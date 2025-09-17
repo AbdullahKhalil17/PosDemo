@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Shift extends Model
+class Shifts extends Model
 {
     use HasFactory;
 
@@ -16,6 +16,7 @@ class Shift extends Model
         'end_time',
         'opening_balance',
         'closing_balance',
+        'actual_balance'
     ];
 
 

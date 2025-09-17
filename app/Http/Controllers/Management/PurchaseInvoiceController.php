@@ -56,31 +56,20 @@ class PurchaseInvoiceController extends Controller
     public function store(Request $request)
     {
       $request->validate([
-        'invoice_date'   => 'required|date',
+        'invoice_date' => 'required|date',
         'invoice_number' => 'required|string|unique:purchase_invoice,invoice_number',
-        'store_id'       => 'required|exists:stores,id',
-        'note'           => 'nullable|string|max:500',
+        'store_id' => 'required|exists:stores,id',
+        'note' => 'nullable|string|max:500',
 
-        'product_id'     => 'required|array|min:1',
-        'quantity'       => 'required|array|min:1',
-        'quantity.*'     => 'required|numeric|min:1',
-        'sellingPrice'   => 'required|array|min:1',
+        'product_id' => 'required|array|min:1',
+        'quantity' => 'required|array|min:1',
+        'quantity.*' => 'required|numeric|min:1',
+        'sellingPrice' => 'required|array|min:1',
         'sellingPrice.*' => 'required|numeric|min:0',
-        'costPrice'      => 'required|array|min:1',
-        'costPrice.*'    => 'required|numeric|min:0',
-        'totalValue'     => 'required|array|min:1',
-        'totalValue.*'   => 'required|numeric|min:0',
-        ], [
-            'invoice_date.required'   => 'تاريخ الفاتورة مطلوب',
-            'invoice_number.required' => 'رقم الفاتورة مطلوب',
-            'invoice_number.unique'   => 'رقم الفاتورة موجود مسبقًا',
-            'store_id.required'       => 'يجب اختيار المخزن',
-            'product_id.required'     => 'يجب إضافة منتج واحد على الأقل',
-            'quantity.*.required'     => 'الكمية مطلوبة لكل منتج',
-            'quantity.*.min'          => 'الكمية يجب أن تكون أكبر من صفر',
-            'sellingPrice.*.required' => 'سعر البيع مطلوب لكل منتج',
-            'costPrice.*.required'    => 'سعر الشراء مطلوب لكل منتج',
-            'totalValue.*.required'   => 'إجمالي التكاليف مطلوب',
+        'costPrice'=> 'required|array|min:1',
+        'costPrice.*' => 'required|numeric|min:0',
+        'totalValue' => 'required|array|min:1',
+        'totalValue.*' => 'required|numeric|min:0',
         ]);
       try {
         DB::beginTransaction();

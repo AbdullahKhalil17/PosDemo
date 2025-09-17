@@ -25,31 +25,61 @@
                                 class="right-nav-text">الفروع</span> </a>
                     </li>
 
-                    <!-- menu item product-->
                     <li>
-                        <a href="{{ route('product.index') }}"><img
-                                src="{{ URL::asset('assets/images/sidebar/checklist.png') }}"
-                                style="width: 20px; height: 20px; margin-left: 8px;" aria-hidden="true"></img><span
-                                class="right-nav-text">قائمة الاصناف </span> </a>
+                        <a href="javascript:void(0);" data-toggle="collapse" data-target="#product-menu">
+                            <div class="pull-left">
+                                <img src="{{ URL::asset('assets/images/invoice/check-out.png') }}"
+                                    style="width: 20px; height: 20px; margin-left: 8px;" aria-hidden="true"></img>
+                                <span class="right-nav-text">الاصناف</span>
+                            </div>
+                            <div class="pull-right"><i class="ti-plus"></i></div>
+                            <div class="clearfix"></div>
+                        </a>
+                        <ul id="product-menu" class="collapse" data-parent="#sidebarnav">
+                            <li> <a href="{{ route('product.index') }}">قائمة الاصناف</a></li>
+                        </ul>
                     </li>
 
                     <!-- menu item product-->
+                    <li>
+                        <a href="javascript:void(0);" data-toggle="collapse" data-target="#purches-menu">
+                            <div class="pull-left">
+                                <img src="{{ URL::asset('assets/images/invoice/check-out.png') }}"
+                                    style="width: 20px; height: 20px; margin-left: 8px;" aria-hidden="true"></img>
+                                <span class="right-nav-text">المشتريات</span>
+                            </div>
+                            <div class="pull-right"><i class="ti-plus"></i></div>
+                            <div class="clearfix"></div>
+                        </a>
+                        <ul id="purches-menu" class="collapse" data-parent="#sidebarnav">
+                            <li> <a href="{{ route('purchaseInvoice.index') }}">إنشاء فاتورة مشتريات</a></li>
+                            <li> <a href="{{ route('purchaseInvoice.report') }}">فواتير المشتريات</a></li>
+                        </ul>
+                    </li>
 
-                        <li>
-                            <a href="javascript:void(0);" data-toggle="collapse" data-target="#sales-menu">
-                                <div class="pull-left">
-                                    <img src="{{ URL::asset('assets/images/invoice/check-out.png') }}"
-                                        style="width: 20px; height: 20px; margin-left: 8px;" aria-hidden="true"></img>
-                                    <span class="right-nav-text">المشتريات</span>
-                                </div>
-                                <div class="pull-right"><i class="ti-plus"></i></div>
-                                <div class="clearfix"></div>
-                            </a>
-                            <ul id="sales-menu" class="collapse" data-parent="#sidebarnav">
-                                    <li> <a href="{{ route('purchaseInvoice.index') }}">إنشاء فاتورة مشتريات</a></li>
-                                    <li> <a href="{{ route('purchaseInvoice.report') }}">فواتير المشتريات</a></li>
-                            </ul>
-                        </li>
+                    <li>
+                        <a href="javascript:void(0);" data-toggle="collapse" data-target="#sales-menu">
+                            <div class="pull-left">
+                                <img src="{{ URL::asset('assets/images/invoice/check-out.png') }}"
+                                    style="width: 20px; height: 20px; margin-left: 8px;" aria-hidden="true"></img>
+                                <span class="right-nav-text">المبيعات</span>
+                            </div>
+                            <div class="pull-right"><i class="ti-plus"></i></div>
+                            <div class="clearfix"></div>
+                        </a>
+                        <ul id="sales-menu" class="collapse" data-parent="#sidebarnav">
+                            <li> <a href="{{ route('salesInvoice.index') }}">إنشاء فاتورة مبيعات</a></li>
+                            <li> <a href="{{ route('salesInvoice.report') }}">فواتير المبيعات</a></li>
+                        </ul>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('shifts.index') }}"><img
+                          src="{{ URL::asset('assets/images/sidebar/checklist.png') }}"
+                          style="width: 20px; height: 20px; margin-left: 8px;" aria-hidden="true"></img><span
+                          class="right-nav-text">إغلاق الشيفت</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>

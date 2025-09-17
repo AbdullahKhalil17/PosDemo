@@ -2,10 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\Management\UnitsController;
 use App\Http\Controllers\Management\StoresController;
 use App\Http\Controllers\Management\ProductsController;
 use App\Http\Controllers\Management\PurchaseInvoiceController;
+use App\Http\Controllers\Management\SalesInvoiceController;
+use App\Http\Controllers\Management\ShiftsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,5 +60,20 @@ Route::middleware('auth:web')->group(function () {
       Route::post('store', [PurchaseInvoiceController::class, 'store'])->name('store');
       Route::get('report', [PurchaseInvoiceController::class, 'reportInvoice'])->name('report');
   });
+
+  Route::prefix('sales')->name('salesInvoice.')->group(function () {
+    Route::get('/', [SalesInvoiceController::class, 'index'])->name('index');
+    Route::get('/search', [SalesInvoiceController::class, 'searchProduct'])->name('searchProduct');
+    Route::post('store', [SalesInvoiceController::class, 'store'])->name('store');
+    Route::get('report', [SalesInvoiceController::class, 'report'])->name('report');
+    Route::get('latest-price/{id}', [SalesInvoiceController::class, 'latestPrice'])->name('latestPrice');
+  });
+
+
+
+    Route::prefix('shifts')->name('shifts.')->group(function () {
+      Route::get('/', [ShiftsController::class, 'index'])->name('index');
+      Route::post('close', [ShiftsController::class, 'close'])->name('close');
+    });
 
 });

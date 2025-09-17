@@ -81,7 +81,7 @@ class ProductsController extends Controller
     public function destroy($id)
     {
       try {
-        $product = Products::where('id', $id)->delete();
+        Products::where('id', $id)->delete();
         return redirect()->route('product.index')->with('success', 'تم حذف المنتج بنجاح');
       } catch (\Exception $e) {
         return redirect()->route('product.index')->with('error', 'حدث خطأ أثناء حذف المنتج');

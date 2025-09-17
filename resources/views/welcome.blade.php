@@ -7,7 +7,6 @@
 @endsection
 @section('content')
     <div class="row">
-      @include('components.alerts')
         <!-- Card 1: Total Daily Purchases -->
         <div class="col-xl-4 col-lg-6 col-md-6 mb-30">
             <div class="card card-statistics h-100">
