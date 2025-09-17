@@ -1,3 +1,0 @@
-- [x] Add POST route for closing shift in routes/web.php
-- [x] Add close method in ShiftsController.php to handle closing the shift
-- [x] Update form action in close-shift.blade.php to point to the close route

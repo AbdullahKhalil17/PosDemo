@@ -2,23 +2,23 @@
 
 namespace App\Http\Controllers\Management;
 
+use Carbon\Carbon;
 use App\Models\Shifts;
 use App\Models\Stocks;
 use App\Models\Stores;
 use App\Models\Products;
 use App\Models\SalesInvoice;
-
 use Illuminate\Http\Request;
-
 use Illuminate\Support\Facades\DB;
 use App\Models\SalesInvoiceDetails;
 use App\Http\Controllers\Controller;
-use Carbon\Carbon;
-
-use function Laravel\Prompts\select;
+use App\Http\Traits\NetworkHelperTrait;
+use Illuminate\Support\Facades\Storage;
 
 class SalesInvoiceController extends Controller
 {
+    use NetworkHelperTrait;
+    
     public function index()
     {
       $store = Stores::select('id', 'name')->get();
@@ -71,83 +71,86 @@ class SalesInvoiceController extends Controller
         $request->validate([
             'store_id' => 'required|exists:stores,id',
             'invoice_number' => 'required|integer|unique:sales_invoice,invoice_number',
-            'invoice_date'=> 'required|date', 
+            'invoice_date'=> 'required|date',
             'total_invoice' => 'required|numeric|min:0',
             'note' => 'nullable|string|max:500',
-
-            'product_id' => 'required|array|min:1', 
+            'product_id' => 'required|array|min:1',
             'quantity' => 'required|array|min:1',
-            'quantity.*' => 'required|numeric|min:1', 
-            'sellingPrice' => 'required|array|min:1', 
+            'quantity.*' => 'required|numeric|min:1',
+            'sellingPrice' => 'required|array|min:1',
             'sellingPrice.*' => 'required|numeric|min:0',
         ]);
 
-        DB::beginTransaction();
-        try {
-            $invoice = SalesInvoice::create([
-                'user_id' => auth()->id(),
-                'store_id' => $request->store_id,
-                'invoice_number'=> $request->invoice_number,
-                'invoice_date' => $request->invoice_date,
-                'total_invoice' => $request->total_invoice,
-                'note' => $request->note,
-            ]);
+        // check connect internet
+        if ($this->isConnected()) {
+            try {
+                DB::beginTransaction();
 
-            foreach ($request->product_id as $i => $productId) {
-                $quantity = $request->quantity[$i];
-                $price = $request->sellingPrice[$i];
-                $total = $quantity * $price;
-              // return $total;
-                SalesInvoiceDetails::create([
-                    'invoice_id' => $invoice->id,
-                    'product_id' => $productId,
-                    'quantity' => $quantity,
-                    'price' => $price,
-                    'total' => $total,
+                $invoice = SalesInvoice::create([
+                    'user_id' => auth()->id(),
+                    'store_id' => $request->store_id,
+                    'invoice_number'=> $request->invoice_number,
+                    'invoice_date' => $request->invoice_date,
+                    'total_invoice' => $request->total_invoice,
+                    'note' => $request->note,
                 ]);
 
-                  $stocks = Stocks::where('product_id', $productId)
-                      ->where('store_id', $request->store_id)
-                      ->where('quantity', '>', 0)
-                      ->orderBy('id') 
-                      ->get();
+                foreach ($request->product_id as $i => $productId) {
+                    $quantity = $request->quantity[$i];
+                    $price = $request->sellingPrice[$i];
+                    $total = $quantity * $price;
 
-                  foreach ($stocks as $stock) {
-                      if ($stock->quantity >= $quantity) {
-                          $stock->quantity -= $quantity;
-                          $stock->save();
-                          $quantity = 0;
-                      } else {
-                          $quantity -= $stock->quantity;
-                          $stock->quantity = 0;
-                          $stock->save();
+                    SalesInvoiceDetails::create([
+                        'invoice_id' => $invoice->id,
+                        'product_id' => $productId,
+                        'quantity' => $quantity,
+                        'price' => $price,
+                        'total' => $total,
+                    ]);
+                    $stocks = Stocks::where('product_id', $productId)
+                          ->where('store_id', $request->store_id)
+                          ->where('quantity', '>', 0)
+                          ->orderBy('id') 
+                          ->get();
+
+                      foreach ($stocks as $stock) {
+                          if ($stock->quantity >= $quantity) {
+                              $stock->quantity -= $quantity;
+                              $stock->save();
+                              $quantity = 0;
+                          } else {
+                              $quantity -= $stock->quantity;
+                              $stock->quantity = 0;
+                              $stock->save();
+                          }
                       }
-                  }
-                  if ($quantity > 0) {
-                      DB::rollBack();
-                      return back()->with('error', 'الكمية غير كافية للمنتج.');
-                  }
-            }
-            $existsShift = Shifts::where('user_id', auth()->id())->orWhere('store_id', $request->store_id)
-            ->whereNull('end_time')->first();
-            if($existsShift) {
-              $existsShift->closing_balance += $request->total_invoice;
-              $existsShift->save();
-            } else {
-              Shifts::create([
-                'user_id' => auth()->id(),
-                'store_id' => $request->store_id,
-                'start_time' => Carbon::now(),
-                'opening_balance' => $request->total_invoice,
-              ]);
-            }
+                      if ($quantity > 0) {
+                          DB::rollBack();
+                          return back()->with('error', 'الكمية غير كافية للمنتج.');
+                      }
+                }
 
-            DB::commit();
-            return back()->with('success', 'تم حفظ الفاتورة بنجاح.');
+                DB::commit();
+                return back()->with('success', 'تم حفظ الفاتورة بنجاح.');
 
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'خطأ: ' . $e->getMessage());
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return back()->with('error', 'حدث خطأ أثناء حفظ الفاتورة: '.$e->getMessage());
+            }
+        } else {
+            $data = $request->all();
+            $data['user_id'] = auth()->id();
+            $data['created_at'] = now();
+
+            $path = 'offline_invoices/offline_invoices.json';
+            $invoices = [];
+            if (Storage::exists($path)) {
+                $invoices = json_decode(Storage::get($path), true);
+            }
+            $invoices[] = $data;
+            Storage::put($path, json_encode($invoices, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
+
+            return back()->with('warning', 'لا يوجد اتصال. تم حفظ الفاتورة محليًا وسيتم رفعها عند عودة الإنترنت.');
         }
     }
 
