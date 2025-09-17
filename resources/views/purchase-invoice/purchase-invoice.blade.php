@@ -36,7 +36,7 @@
                                         <td>{{ $inv->invoice_number }}</td>
                                         <td>{{ $inv->store->name }}</td>
                                         <td>{{ $inv->total_amount }}</td>
-                                        <td>{{ $inv->invoice_date->format('Y-m-d') }}</td>
+                                        <td>{{ $inv->invoice_date }}</td>
                                         <td>{{ $inv->user->name }}</td>
                                     </tr>
                                 @endforeach

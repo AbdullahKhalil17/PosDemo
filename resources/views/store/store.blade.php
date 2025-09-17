@@ -12,7 +12,7 @@
         <div class="col-md-12 mb-30">
             <div class="card card-statistics h-100">
                 <div class="card-body">
-                    <form action="{{ route('stores.create') }}" method="POST">
+                    <form action="{{ route('stores.store') }}" method="POST">
                         @csrf
                         <h3 style="font-family: 'Cairo', sans-serif;color: #84BA3F">تسجيل بيانات مخزن جديد</h3>
                         <div class="row">

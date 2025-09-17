@@ -23,8 +23,20 @@ class SalesInvoiceController extends Controller
     public function index()
     {
       $store = Stores::select('id', 'name')->get();
-      return view('sales-invoice.index', compact('store'));
+      $invoiceNumber = $this->generateInvoiceNumber();
+
+      return view('sales-invoice.index', compact('store', 'invoiceNumber'));
     }
+
+
+    private function generateInvoiceNumber()
+      {
+          do {
+              $invoiceNumber = rand(1000, 999999);
+          } while (SalesInvoice::where('invoice_number', $invoiceNumber)->exists());
+
+          return $invoiceNumber;
+      }
 
 
     public function searchProduct(Request $request)
@@ -188,6 +200,16 @@ class SalesInvoiceController extends Controller
                           return back()->with('error', 'الكمية غير كافية للمنتج.');
                       }
                 }
+
+                $shift = Shifts::where('user_id', auth()->id())
+                  ->where('store_id', $request->store_id)
+                  ->whereNull('end_time')
+                  ->first();
+
+                  if ($shift) {
+                      $shift->actual_balance += $invoice->total_invoice;
+                      $shift->save();
+                  }
 
                 DB::commit();
                 return back()->with('success', 'تم حفظ الفاتورة بنجاح.');

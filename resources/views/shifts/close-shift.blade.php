@@ -29,7 +29,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="opening_balance">الرصيد الافتتاحي</label>
-                                <input type="text" value="{{ $shift->opening_balance ?? '' }}" readonly class="form-control">
+                                <input type="text" value="{{ $shift->opening_balance ?? '00' }}" readonly class="form-control">
                             </div>
                         </div>
                     </div>
@@ -37,7 +37,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="closing_balance">الرصيد الحالي</label>
-                                <input type="text" value="{{ $shift->closing_balance ?? '' }}" readonly class="form-control">
+                                <input type="text" value="{{ $shift->actual_balance ?? '' }}" readonly class="form-control">
                             </div>
                         </div>
                     </div>

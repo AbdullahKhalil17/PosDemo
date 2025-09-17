@@ -30,6 +30,7 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
 
+            // إذا كان المستخدم Cashier
             if ($user->role === "cashier") {
                 $openShift = Shifts::where('user_id', $user->id)
                     ->whereNull('end_time')
@@ -51,13 +52,34 @@ class AuthController extends Controller
                     return redirect()->route('salesInvoice.index')->with('success', 'تم فتح شيفت جديد بنجاح.');
                 }
             }
+
+            // إذا كان المستخدم Admin
+            if ($user->role === "admin") {
+                $openShift = Shifts::where('user_id', $user->id)
+                    ->whereNull('end_time')
+                    ->first();
+
+                if (!$openShift) {
+                    // فتح شيفت جديد للأدمن (اختياري)
+                    Shifts::create([
+                        'user_id' => $user->id,
+                        'store_id' => $request->input('store_id'),
+                        'start_time' => now(),
+                        'opening_balance' => 0
+                    ]);
+                }
+                return redirect()->route('dashboard')->with('success', 'تم تسجيل الدخول بنجاح.');
+            }
+
+            // أي دور آخر
             return redirect()->route('dashboard')->with('success', 'تم تسجيل الدخول بنجاح.');
         }
 
         return back()->withErrors([
             'email' => 'البريد الالكتروني أو كلمة المرور غير صحيحة',
-        ])->onlyInput('email'); 
+        ])->onlyInput('email');
     }
+
 
 
 

@@ -26,7 +26,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="invoice_number">رقم الفاتورة</label>
-                                    <input type="number" value="{{ old('invoice_number') }}" id="invoice_number"
+                                    <input type="number" value="{{ old('invoice_number', $invoiceNumber) }}" id="invoice_number"
                                         name="invoice_number" class="form-control">
                                     @error('invoice_number')
                                         <span class="text-danger">{{ $message }}</span>
