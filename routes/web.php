@@ -7,6 +7,7 @@ use App\Http\Controllers\Management\ProductsController;
 use App\Http\Controllers\Management\PurchaseInvoiceController;
 use App\Http\Controllers\Management\SalesInvoiceController;
 use App\Http\Controllers\Management\ShiftsController;
+use App\Http\Controllers\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,9 +28,7 @@ Route::middleware('guest:web')->group(function () {
 
 
 Route::middleware('auth:web')->group(function () {
-  Route::get('/', function () {
-      return view('welcome');
-  })->name('dashboard');
+  Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
   Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -63,10 +62,12 @@ Route::middleware('auth:web')->group(function () {
 
   Route::prefix('sales')->name('salesInvoice.')->group(function () {
     Route::get('/', [SalesInvoiceController::class, 'index'])->name('index');
-    Route::get('/search', [SalesInvoiceController::class, 'searchProduct'])->name('searchProduct');
+    Route::get('search', [SalesInvoiceController::class, 'searchProduct'])->name('searchProduct');
     Route::post('store', [SalesInvoiceController::class, 'store'])->name('store');
     Route::get('report', [SalesInvoiceController::class, 'report'])->name('report');
     Route::get('latest-price/{id}', [SalesInvoiceController::class, 'latestPrice'])->name('latestPrice');
+    Route::post('invoice/update-stock', [SalesInvoiceController::class, 'updateStock'])->name('updateStock');
+    Route::post('invoice/restore-stock', [SalesInvoiceController::class, 'restoreStock'])->name('restoreStock');
   });
 
 

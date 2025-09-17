@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\SalesInvoiceDetails;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Traits\NetworkHelperTrait;
 use Illuminate\Support\Facades\Storage;
 
@@ -28,43 +29,101 @@ class SalesInvoiceController extends Controller
 
     public function searchProduct(Request $request)
     {
-      $barcode = $request->input('barcode');
+        $barcode = $request->input('barcode');
 
-      $product = Products::where('barcode', $barcode)->firstOrFail();
+        $user = Auth::user();
 
-      $stock = Stocks::where('product_id', $product->id)->with(['product' => function ($query) {
-        $query->select('id', 'name', 'sale_price', 'purchase_price', 'barcode');
-      }])->select('product_id', 'store_id', 'quantity')->first();
+        $openShift = Shifts::where('user_id', $user->id)
+            ->whereNull('end_time')
+            ->first();
 
+        $stock = Stocks::where('product_id', Products::where('barcode', $barcode)->value('id'))
+            ->where('store_id', $openShift->store_id)
+            ->with(['product' => function ($query) {
+                $query->select('id', 'name', 'sale_price', 'purchase_price', 'barcode');
+            }])
+            ->select('product_id', 'store_id', 'quantity')
+            ->first();
 
+        if (!$stock) {
+            return response()->json([
+                'error' => true,
+                'message' => 'لا يوجد ستوك لهذا المنتج في فرعك'
+            ]);
+        }
 
-      if (!$stock) {
+        $totalCost = $stock->quantity * $stock->product->purchase_price;
+
+        $data = [
+            'prodctID' => $stock->product_id,
+            'storeID' => $stock->store_id,
+            'quantity'  => $stock->quantity,
+            'product_name' => $stock->product->name,
+            'sale_price' => $stock->product->sale_price,
+            'purchase_price' => $stock->product->purchase_price,
+            'barcode' => $stock->product->barcode,
+            'total_cost' => $totalCost,
+        ];
+
         return response()->json([
-            'error' => true,
-            'message' => 'لا يوجد ستوك لهذا المنتج'
-        ]);
-      }
-
-      $totalCost = $stock->quantity * $stock->product->purchase_price;
-
-      $data = [
-        'prodctID' => $stock->product_id,
-        'storeID' => $stock->store_id,
-        'quantity'  => $stock->quantity,
-        'product_name'   => $stock->product->name,
-        'sale_price'   => $stock->product->sale_price,
-        'purchase_price' => $stock->product->purchase_price,
-        'barcode'   => $stock->product->barcode,
-        'total_cost' => $totalCost,
-      ];
-
-
-      return response()->json([
-        'status' => true,
-        'data' => $data,
-      ], 202);
-
+            'status' => true,
+            'data' => $data,
+        ], 202);
     }
+
+
+    public function updateStock(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|numeric|min:1',
+        ]);
+
+        $user = Auth::user();
+        $openShift = Shifts::where('user_id', $user->id)->whereNull('end_time')->first();
+
+        $stock = Stocks::where('product_id', $request->product_id)
+            ->where('store_id', $openShift->store_id)
+            ->first();
+
+        if (!$stock) {
+            return response()->json(['error' => true, 'message' => 'المنتج غير موجود في المخزن']);
+        }
+
+        if($stock->quantity < $request->quantity) {
+            return response()->json(['error' => true, 'message' => 'الكمية غير كافية']);
+        }
+
+        $stock->quantity -= $request->quantity;
+        $stock->save();
+
+        return response()->json(['status' => true, 'quantity' => $stock->quantity]);
+    }
+
+
+    public function restoreStock(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|numeric|min:1',
+        ]);
+
+        $user = Auth::user();
+        $openShift = Shifts::where('user_id', $user->id)->whereNull('end_time')->first();
+
+        $stock = Stocks::where('product_id', $request->product_id)
+            ->where('store_id', $openShift->store_id)
+            ->first();
+
+        if(!$stock) return response()->json(['error'=>true, 'message'=>'المنتج غير موجود']);
+
+        $stock->quantity += $request->quantity;
+        $stock->save();
+
+        return response()->json(['status'=>true, 'quantity'=>$stock->quantity]);
+    }
+
+
 
     public function store(Request $request)
     {

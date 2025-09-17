@@ -169,24 +169,45 @@ $(document).ready(function () {
     }
 
     $(document).on("click", ".deleteRow", function () {
-        $(this).closest("tr").remove();
+        var row = $(this).closest("tr");
+        var productId = row.find(".product_id").val();
+        var rowQuantity = parseFloat(row.find(".quantity").val()) || 0;
+
+        $.ajax({
+            url: '{{ route('salesInvoice.restoreStock') }}',
+            method: 'POST',
+            data: {
+                product_id: productId,
+                quantity: rowQuantity,
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                console.log('تم إعادة المخزون للمنتج');
+            },
+            error: function(xhr) {
+                console.log('خطأ في إعادة المخزون');
+            }
+        });
+
+        row.remove();
         updateTotals();
     });
 
     $("#international_code").on('input', function() {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(function() {
-            var itemName = $("#international_code").val();
+            var barcode = $("#international_code").val();
             $.ajax({
                 url: "{{ route('salesInvoice.searchProduct') }}",
                 method: 'GET',
-                data: { barcode: itemName },
+                data: { barcode: barcode },
                 success: function (response) {
                     $("#error").empty();
                     $("#international_code").val(response.data.barcode);
                     $("#itemName").val(response.data.product_name);
                     $("#sellingPrice").val(response.data.sale_price);
                     $("#product_id").val(response.data.prodctID);
+                    $("#quantity").data('available', response.data.quantity);
 
                     $("#quantity").off('input').on('input', function() {
                         var quantity = parseFloat($(this).val()) || 0;
@@ -201,25 +222,47 @@ $(document).ready(function () {
                             var barcode = $('#international_code').val();
                             var name = $('#itemName').val();
                             var productId = $('#product_id').val();
-                            var quantity = $('#quantity').val();
-                            var salePrice = $('#sellingPrice').val();
-                            var total = $('#totalValue').val();
+                            var quantity = parseFloat($('#quantity').val()) || 0;
+                            var salePrice = parseFloat($('#sellingPrice').val()) || 0;
+                            var total = parseFloat($('#totalValue').val()) || 0;
+                            var availableQuantity = parseFloat($('#quantity').data('available')) || 0;
 
-                            var newRow = "<tr>";
-                            newRow += '<td><input type="text" name="barcode[]" value="' + barcode + '" class="form-control barcode" readonly></td>';
-                            newRow += '<td><input type="text" name="itemName[]" value="' + name + '" class="form-control itemName" readonly></td>';
-                            newRow += '<td hidden><input type="hidden" type="text" name="product_id[]" value="' + productId + '" class="form-control product_id" readonly></td>';
-                            newRow += '<td><input type="number" name="quantity[]" value="' + quantity + '" class="form-control quantity" readonly></td>';
-                            newRow += '<td><input type="number" name="sellingPrice[]" value="' + salePrice + '" class="form-control sellingPrice" readonly data-original-price="' + salePrice + '"></td>';
-                            newRow += '<td><input type="number" name="totalValue[]" value="' + total + '" class="form-control totalValue" readonly></td>';
-                            newRow += '<td><button type="button" class="btn btn-danger btn-sm deleteRow">حذف</button></td>';
-                            newRow += "</tr>";
+                            if(quantity > availableQuantity) {
+                                alert('الكمية المطلوبة أكبر من المخزون المتاح');
+                                return;
+                            }
 
-                            $("#invoice_details_table tbody").append(newRow);
-                            updateTotals();
+                            $.ajax({
+                                url: '{{ route('salesInvoice.updateStock') }}',
+                                method: 'POST',
+                                data: {
+                                    product_id: productId,
+                                    quantity: quantity,
+                                    _token: '{{ csrf_token() }}'
+                                },
+                                success: function(response) {
+                                    var newRow = "<tr>";
+                                    newRow += '<td><input type="text" name="barcode[]" value="' + barcode + '" class="form-control barcode" readonly></td>';
+                                    newRow += '<td><input type="text" name="itemName[]" value="' + name + '" class="form-control itemName" readonly></td>';
+                                    newRow += '<td hidden><input type="hidden" name="product_id[]" value="' + productId + '" class="form-control product_id" readonly></td>';
+                                    newRow += '<td><input type="number" name="quantity[]" value="' + quantity + '" class="form-control quantity" readonly></td>';
+                                    newRow += '<td><input type="number" name="sellingPrice[]" value="' + salePrice + '" class="form-control sellingPrice" readonly data-original-price="' + salePrice + '"></td>';
+                                    newRow += '<td><input type="number" name="totalValue[]" value="' + total + '" class="form-control totalValue" readonly></td>';
+                                    newRow += '<td><button type="button" class="btn btn-danger btn-sm deleteRow">حذف</button></td>';
+                                    newRow += "</tr>";
 
-                            $("#international_code, #itemName, #quantity, #sellingPrice, #totalValue").val("");
-                            $("#international_code").focus();
+                                    $("#invoice_details_table tbody").append(newRow);
+                                    updateTotals();
+
+                                    $('#quantity').data('available', availableQuantity - quantity);
+
+                                    $("#international_code, #itemName, #quantity, #sellingPrice, #totalValue").val("");
+                                    $("#international_code").focus();
+                                },
+                                error: function(xhr) {
+                                    alert('حدث خطأ أثناء تحديث المخزون');
+                                }
+                            });
                         }
                     });
                 },
@@ -260,8 +303,8 @@ $(document).ready(function () {
             });
         });
     }, 10000);
-
 });
+
 </script>
 
 

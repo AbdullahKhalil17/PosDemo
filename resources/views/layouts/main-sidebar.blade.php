@@ -6,7 +6,7 @@
                 <ul class="nav navbar-nav side-menu" id="sidebarnav">
                     <!-- menu item Dashboard-->
                     <li>
-                        <a href="#">
+                        <a href="{{ route('dashboard') }}">
                             <div class="pull-left">
                                 <img src="{{ URL::asset('assets/images/sidebar/operational-system.png') }}"
                                     style="width: 20px; height: 20px; margin-left: 8px;" aria-hidden="true"></img>
@@ -28,7 +28,7 @@
                     <li>
                         <a href="javascript:void(0);" data-toggle="collapse" data-target="#product-menu">
                             <div class="pull-left">
-                                <img src="{{ URL::asset('assets/images/invoice/check-out.png') }}"
+                                <img src="{{ URL::asset('assets/images/invoice/petition.png') }}"
                                     style="width: 20px; height: 20px; margin-left: 8px;" aria-hidden="true"></img>
                                 <span class="right-nav-text">الاصناف</span>
                             </div>
@@ -75,7 +75,7 @@
 
                     <li>
                         <a href="{{ route('shifts.index') }}"><img
-                          src="{{ URL::asset('assets/images/sidebar/checklist.png') }}"
+                          src="{{ URL::asset('assets/images/invoice/point-of-sale.png') }}"
                           style="width: 20px; height: 20px; margin-left: 8px;" aria-hidden="true"></img><span
                           class="right-nav-text">إغلاق الشيفت</span>
                         </a>

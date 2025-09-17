@@ -30,31 +30,33 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
 
-            $openShift = Shifts::where('user_id', $user->id)
-              ->whereNull('end_time')
-              ->first();
+            if ($user->role === "cashier") {
+                $openShift = Shifts::where('user_id', $user->id)
+                    ->whereNull('end_time')
+                    ->first();
 
-            if ($openShift) {
-                if ($openShift->store_id == $request->input('store_id')) {
-                    return redirect()->route('dashboard');
+                if ($openShift) {
+                    if ($openShift->store_id != $request->input('store_id')) {
+                        Auth::logout();
+                        return redirect()->back()->with('error', 'يوجد شيفت مفتوح لك من قبل فى فرع آخر');
+                    }
+                    return redirect()->route('salesInvoice.index');
                 } else {
-                    Auth::logout();
-                    return redirect()->back()->with('error', 'يوجد شيفت مفتوح لك من قبل فى فرع أخر');
+                    Shifts::create([
+                        'user_id' => $user->id,
+                        'store_id' => $request->input('store_id'),
+                        'start_time' => now(),
+                        'opening_balance' => 0
+                    ]);
+                    return redirect()->route('salesInvoice.index')->with('success', 'تم فتح شيفت جديد بنجاح.');
                 }
-            } else {
-                Shifts::create([
-                    'user_id' => $user->id,
-                    'store_id' => $request->input('store_id'),
-                    'start_time' => now(),
-                    'opening_balance' => 0
-                ]);
-                return redirect()->route('dashboard')->with('success', 'تم فتح شيفت جديد بنجاح.');
             }
+            return redirect()->route('dashboard')->with('success', 'تم تسجيل الدخول بنجاح.');
         }
 
         return back()->withErrors([
             'email' => 'البريد الالكتروني أو كلمة المرور غير صحيحة',
-        ])->onlyInput('email');
+        ])->onlyInput('email'); 
     }
 
 
