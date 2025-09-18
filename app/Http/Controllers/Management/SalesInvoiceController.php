@@ -178,27 +178,27 @@ class SalesInvoiceController extends Controller
                         'price' => $price,
                         'total' => $total,
                     ]);
-                    $stocks = Stocks::where('product_id', $productId)
-                          ->where('store_id', $request->store_id)
-                          ->where('quantity', '>', 0)
-                          ->orderBy('id') 
-                          ->get();
+                    // $stocks = Stocks::where('product_id', $productId)
+                    //       ->where('store_id', $request->store_id)
+                    //       ->where('quantity', '>', 0)
+                    //       ->orderBy('id') 
+                    //       ->get();
 
-                      foreach ($stocks as $stock) {
-                          if ($stock->quantity >= $quantity) {
-                              $stock->quantity -= $quantity;
-                              $stock->save();
-                              $quantity = 0;
-                          } else {
-                              $quantity -= $stock->quantity;
-                              $stock->quantity = 0;
-                              $stock->save();
-                          }
-                      }
-                      if ($quantity > 0) {
-                          DB::rollBack();
-                          return back()->with('error', 'الكمية غير كافية للمنتج.');
-                      }
+                    //   foreach ($stocks as $stock) {
+                    //       if ($stock->quantity >= $quantity) {
+                    //           $stock->quantity -= $quantity;
+                    //           $stock->save();
+                    //           $quantity = 0;
+                    //       } else {
+                    //           $quantity -= $stock->quantity;
+                    //           $stock->quantity = 0;
+                    //           $stock->save();
+                    //       }
+                    //   }
+                    //   if ($quantity > 0) {
+                    //       DB::rollBack();
+                    //       return back()->with('error', 'الكمية غير كافية للمنتج.');
+                    //   }
                 }
 
                 $shift = Shifts::where('user_id', auth()->id())

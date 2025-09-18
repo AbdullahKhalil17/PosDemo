@@ -78,6 +78,7 @@ class PurchaseInvoiceController extends Controller
           'invoice_date' => $request->input('invoice_date'),
           'user_id' => auth()->id(),
           'invoice_number' => $request->input('invoice_number'),
+          'supplier_name' => 'Abdullah Khalil',
           'total_amount' => 0,
           'status' => 'confirmed',
           'note' => $request->input('note'),
