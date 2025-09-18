@@ -20,13 +20,13 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="invoice_date">تاريخ الفاتورة</label>
-                                    <input type="date" id="invoice_date" name="invoice_date" class="form-control">
+                                    <input type="date" id="invoice_date" name="invoice_date" value="{{ getCurrentDate() }}" class="form-control">
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="invoice_number">رقم الفاتورة</label>
-                                    <input type="number" value="{{ old('invoice_number', $invoiceNumber) }}" id="invoice_number"
+                                    <input type="text" value="{{ old('invoice_number', generateInvoiceNumber()) }}" id="invoice_number"
                                         name="invoice_number" class="form-control">
                                     @error('invoice_number')
                                         <span class="text-danger">{{ $message }}</span>

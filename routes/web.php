@@ -77,4 +77,7 @@ Route::middleware('auth:web')->group(function () {
       Route::post('close', [ShiftsController::class, 'close'])->name('close');
     });
 
+
+    Route::get('invoice_number', [SalesInvoiceController::class, 'generateInvoiceNumber']);
+
 });

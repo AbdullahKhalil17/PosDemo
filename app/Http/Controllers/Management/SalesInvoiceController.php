@@ -11,32 +11,23 @@ use App\Models\SalesInvoice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\SalesInvoiceDetails;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+// use App\Http\Traits\NetworkHelperTrait;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Traits\NetworkHelperTrait;
 use Illuminate\Support\Facades\Storage;
 
 class SalesInvoiceController extends Controller
 {
-    use NetworkHelperTrait;
+    // use NetworkHelperTrait;
     
     public function index()
     {
       $store = Stores::select('id', 'name')->get();
-      $invoiceNumber = $this->generateInvoiceNumber();
+      // $invoiceNumber = $this->generateInvoiceNumber();
 
-      return view('sales-invoice.index', compact('store', 'invoiceNumber'));
+      return view('sales-invoice.index', compact('store'));
     }
-
-
-    private function generateInvoiceNumber()
-      {
-          do {
-              $invoiceNumber = rand(1000, 999999);
-          } while (SalesInvoice::where('invoice_number', $invoiceNumber)->exists());
-
-          return $invoiceNumber;
-      }
 
 
     public function searchProduct(Request $request)
@@ -109,7 +100,9 @@ class SalesInvoiceController extends Controller
         $stock->quantity -= $request->quantity;
         $stock->save();
 
-        return response()->json(['status' => true, 'quantity' => $stock->quantity]);
+        return response()->json([
+          'status' => true, 
+          'quantity' => $stock->quantity]);
     }
 
 
@@ -132,7 +125,10 @@ class SalesInvoiceController extends Controller
         $stock->quantity += $request->quantity;
         $stock->save();
 
-        return response()->json(['status'=>true, 'quantity'=>$stock->quantity]);
+        return response()->json([
+          'status'=>true, 
+          'quantity'=>$stock->quantity
+        ]);
     }
 
 
@@ -141,7 +137,7 @@ class SalesInvoiceController extends Controller
     {
         $request->validate([
             'store_id' => 'required|exists:stores,id',
-            'invoice_number' => 'required|integer|unique:sales_invoice,invoice_number',
+            'invoice_number' => 'required|string|unique:sales_invoice,invoice_number',
             'invoice_date'=> 'required|date',
             'total_invoice' => 'required|numeric|min:0',
             'note' => 'nullable|string|max:500',
@@ -153,10 +149,9 @@ class SalesInvoiceController extends Controller
         ]);
 
         // check connect internet
-        if ($this->isConnected()) {
+        if (isConnected()) {
             try {
                 DB::beginTransaction();
-
                 $invoice = SalesInvoice::create([
                     'user_id' => auth()->id(),
                     'store_id' => $request->store_id,
@@ -167,6 +162,7 @@ class SalesInvoiceController extends Controller
                 ]);
 
                 foreach ($request->product_id as $i => $productId) {
+                    // collect total product
                     $quantity = $request->quantity[$i];
                     $price = $request->sellingPrice[$i];
                     $total = $quantity * $price;
@@ -178,27 +174,7 @@ class SalesInvoiceController extends Controller
                         'price' => $price,
                         'total' => $total,
                     ]);
-                    // $stocks = Stocks::where('product_id', $productId)
-                    //       ->where('store_id', $request->store_id)
-                    //       ->where('quantity', '>', 0)
-                    //       ->orderBy('id') 
-                    //       ->get();
-
-                    //   foreach ($stocks as $stock) {
-                    //       if ($stock->quantity >= $quantity) {
-                    //           $stock->quantity -= $quantity;
-                    //           $stock->save();
-                    //           $quantity = 0;
-                    //       } else {
-                    //           $quantity -= $stock->quantity;
-                    //           $stock->quantity = 0;
-                    //           $stock->save();
-                    //       }
-                    //   }
-                    //   if ($quantity > 0) {
-                    //       DB::rollBack();
-                    //       return back()->with('error', 'الكمية غير كافية للمنتج.');
-                    //   }
+                    
                 }
 
                 $shift = Shifts::where('user_id', auth()->id())
@@ -206,17 +182,15 @@ class SalesInvoiceController extends Controller
                   ->whereNull('end_time')
                   ->first();
 
-                  if ($shift) {
-                      $shift->actual_balance += $invoice->total_invoice;
-                      $shift->save();
-                  }
+                  $shift->actual_balance += $invoice->total_invoice;
+                  $shift->save();
 
                 DB::commit();
                 return back()->with('success', 'تم حفظ الفاتورة بنجاح.');
 
             } catch (\Exception $e) {
                 DB::rollBack();
-                return back()->with('error', 'حدث خطأ أثناء حفظ الفاتورة: '.$e->getMessage());
+                return back()->with('error', 'حدث خطأ غير متوقع أثناء حفظ الفاتورة. برجاء المحاولة مرة أخرى.');
             }
         } else {
             $data = $request->all();
@@ -229,7 +203,7 @@ class SalesInvoiceController extends Controller
                 $invoices = json_decode(Storage::get($path), true);
             }
             $invoices[] = $data;
-            Storage::put($path, json_encode($invoices, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
+            Storage::put($path, json_encode($invoices, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
             return back()->with('warning', 'لا يوجد اتصال. تم حفظ الفاتورة محليًا وسيتم رفعها عند عودة الإنترنت.');
         }

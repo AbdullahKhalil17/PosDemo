@@ -30,7 +30,6 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
 
-            // إذا كان المستخدم Cashier
             if ($user->role === "cashier") {
                 $openShift = Shifts::where('user_id', $user->id)
                     ->whereNull('end_time')
@@ -53,14 +52,12 @@ class AuthController extends Controller
                 }
             }
 
-            // إذا كان المستخدم Admin
             if ($user->role === "admin") {
                 $openShift = Shifts::where('user_id', $user->id)
                     ->whereNull('end_time')
                     ->first();
 
                 if (!$openShift) {
-                    // فتح شيفت جديد للأدمن (اختياري)
                     Shifts::create([
                         'user_id' => $user->id,
                         'store_id' => $request->input('store_id'),
@@ -70,8 +67,6 @@ class AuthController extends Controller
                 }
                 return redirect()->route('dashboard')->with('success', 'تم تسجيل الدخول بنجاح.');
             }
-
-            // أي دور آخر
             return redirect()->route('dashboard')->with('success', 'تم تسجيل الدخول بنجاح.');
         }
 
@@ -91,6 +86,4 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
         return redirect()->route('login')->with('success', 'تم تسجيل الخروج بنجاح');
     }
-
-
 }

@@ -21,7 +21,7 @@ class SyncInvoices extends Command
       public function handle()
       {
         if (!$this->isConnected()) {
-          $this->warn("⚠️ لا يوجد اتصال بالإنترنت. تم تأجيل المزامنة.");
+          $this->warn("لا يوجد اتصال بالإنترنت. تم تأجيل المزامنة.");
           Log::warning("Sync skipped - No internet connection");
           return;
         }
@@ -45,6 +45,7 @@ class SyncInvoices extends Command
 
         foreach ($invoices as $data) {
           try {
+            // check inoice in database
             $existingInvoice = SalesInvoice::where('invoice_number', $data['invoice_number'])->first();
             if ($existingInvoice) {
               $this->info("الفاتورة رقم {$data['invoice_number']} موجودة بالفعل. تم تخطيها.");
@@ -111,16 +112,19 @@ class SyncInvoices extends Command
             }
 
             DB::commit();
-            $this->info("تم مزامنة الفاتورة رقم {$data['invoice_number']} بنجاح.");
-            Log::info("Sync Success", ['invoice_number' => $data['invoice_number']]);
+              $this->info("تم مزامنة الفاتورة رقم {$data['invoice_number']} بنجاح.");
+              Log::info("Sync Success", ['invoice_number' => $data['invoice_number']]);
           } catch (\Exception $e) {
             DB::rollBack();
             $this->error("فشل مزامنة الفاتورة رقم {$data['invoice_number']}: " . $e->getMessage());
+            
             Log::error("Sync Failed", [
               'invoice_number' => $data['invoice_number'],
               'error' => $e->getMessage()
             ]);
+
             $this->error("فشل مزامنة الفاتورة رقم {$data['invoice_number']}: " . $e->getMessage());
+            
             $failedInvoices[] = $data;
             continue;
           }

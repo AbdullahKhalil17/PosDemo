@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Management;
 
+use App\Models\Shifts;
+use App\Models\Stocks;
 use App\Models\Stores;
 use App\Models\Products;
 use Illuminate\Http\Request;
@@ -9,7 +11,6 @@ use App\Models\PurchaseInvoice;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\PurchaseInvoiceDetails;
-use App\Models\Stocks;
 use Illuminate\Database\Events\TransactionBeginning;
 
 class PurchaseInvoiceController extends Controller
@@ -64,8 +65,7 @@ class PurchaseInvoiceController extends Controller
         'product_id' => 'required|array|min:1',
         'quantity' => 'required|array|min:1',
         'quantity.*' => 'required|numeric|min:1',
-        'sellingPrice' => 'required|array|min:1',
-        'sellingPrice.*' => 'required|numeric|min:0',
+        
         'costPrice'=> 'required|array|min:1',
         'costPrice.*' => 'required|numeric|min:0',
         'totalValue' => 'required|array|min:1',
@@ -85,22 +85,25 @@ class PurchaseInvoiceController extends Controller
         ]);
         $productIds = $request->input('product_id');
         $quantities = $request->input('quantity');
-        $sellingPrices = $request->input('sellingPrice');
         $costPrices = $request->input('costPrice');
         $totalValues = $request->input('totalValue');
 
         $totalInvoiceAmount = 0;
 
         foreach($productIds as $index => $productId) {
+          
           $unitPrice = $costPrices[$index];
           $total = $totalValues[$index];
-          $item = PurchaseInvoiceDetails::create([
+          $qty = $quantities[$index];
+          
+          PurchaseInvoiceDetails::create([
             'purchase_invoice_id' => $invoice->id,
             'product_id' => $productId,
-            'quantity' => $quantities[$index],
+            'quantity' => $qty,
             'unit_price' => $unitPrice,
             'total' => $total,
           ]);
+          
           Stocks::create([
               'product_id' => $productId,
               'store_id'   => $request->input('store_id'),
@@ -108,9 +111,13 @@ class PurchaseInvoiceController extends Controller
           ]);
           $totalInvoiceAmount += $total;
         }
-
         $invoice->total_amount = $totalInvoiceAmount;
         $invoice->save();
+
+
+        $payInvoice = Shifts::where('user_id', auth()->id())->first();
+        $payInvoice->actual_balance -=$totalInvoiceAmount;
+        $payInvoice->save();
 
         DB::commit();
         return redirect()->route('purchaseInvoice.index')->with('success', 'تم حفظ الفاتورة بنجاح');
