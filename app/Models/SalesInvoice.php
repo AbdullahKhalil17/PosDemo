@@ -17,6 +17,7 @@ class SalesInvoice extends Model
         'invoice_number',
         'invoice_date',
         'total_invoice',
+        'payment_method',
         'note',
     ];
 

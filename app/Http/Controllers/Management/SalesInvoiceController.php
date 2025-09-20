@@ -9,11 +9,13 @@ use App\Models\Stores;
 use App\Models\Products;
 use App\Models\SalesInvoice;
 use Illuminate\Http\Request;
+use Faker\Provider\ar_EG\Payment;
+use App\Models\SafeTransaction;
 use Illuminate\Support\Facades\DB;
 use App\Models\SalesInvoiceDetails;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\Controller;
 // use App\Http\Traits\NetworkHelperTrait;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
@@ -42,6 +44,7 @@ class SalesInvoiceController extends Controller
 
         $stock = Stocks::where('product_id', Products::where('barcode', $barcode)->value('id'))
             ->where('store_id', $openShift->store_id)
+            ->where('quantity', '>', 0)
             ->with(['product' => function ($query) {
                 $query->select('id', 'name', 'sale_price', 'purchase_price', 'barcode');
             }])
@@ -87,6 +90,7 @@ class SalesInvoiceController extends Controller
 
         $stock = Stocks::where('product_id', $request->product_id)
             ->where('store_id', $openShift->store_id)
+            ->where('quantity', '>', 0)
             ->first();
 
         if (!$stock) {
@@ -118,6 +122,7 @@ class SalesInvoiceController extends Controller
 
         $stock = Stocks::where('product_id', $request->product_id)
             ->where('store_id', $openShift->store_id)
+            ->where('quantity', '>', 0)
             ->first();
 
         if(!$stock) return response()->json(['error'=>true, 'message'=>'المنتج غير موجود']);
@@ -146,6 +151,7 @@ class SalesInvoiceController extends Controller
             'quantity.*' => 'required|numeric|min:1',
             'sellingPrice' => 'required|array|min:1',
             'sellingPrice.*' => 'required|numeric|min:0',
+            'payment_method' => 'required|in:cash,visa,online'
         ]);
 
         // check connect internet
@@ -177,7 +183,7 @@ class SalesInvoiceController extends Controller
                     
                 }
 
-                $shift = Shifts::where('user_id', auth()->id())
+                  $shift = Shifts::where('user_id', auth()->id())
                   ->where('store_id', $request->store_id)
                   ->whereNull('end_time')
                   ->first();
@@ -185,12 +191,27 @@ class SalesInvoiceController extends Controller
                   $shift->actual_balance += $invoice->total_invoice;
                   $shift->save();
 
+
+                SafeTransaction::create([
+                    'safe_id' => $shift->safe_id,
+                    'shift_id' => $shift->id,
+                    'invoice_id' => $invoice->id,
+                    'user_id' => auth()->id(),
+                    'transaction_type' => 'in',
+                    'payment_method' => $request->payment_method,
+                    'amount' => $invoice->total_invoice,
+                    'note' => 'فاتورة رقم ' . $invoice->invoice_number,
+                ]);
+
                 DB::commit();
                 return back()->with('success', 'تم حفظ الفاتورة بنجاح.');
 
             } catch (\Exception $e) {
                 DB::rollBack();
-                return back()->with('error', 'حدث خطأ غير متوقع أثناء حفظ الفاتورة. برجاء المحاولة مرة أخرى.');
+                // return back()->with('error', 'حدث خطأ غير متوقع أثناء حفظ الفاتورة. برجاء المحاولة مرة أخرى.');
+
+
+                return back()->with('error', $e->getMessage());
             }
         } else {
             $data = $request->all();

@@ -42,7 +42,7 @@
                         </div>
                     </div>
 
-                    <form action="{{ route('shifts.close') }}" method="POST">
+                    <form action="{{ route('shifts.close', $shift->id) }}" method="POST">
                         @csrf
                         <div class="row">
                             <div class="col-md-4">

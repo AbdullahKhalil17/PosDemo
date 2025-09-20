@@ -14,11 +14,13 @@ class Shifts extends Model
     protected $fillable = [
         'user_id',
         'store_id',
+        'safe_id',
         'start_time',
         'end_time',
         'opening_balance',
         'closing_balance',
-        'actual_balance'
+        'actual_balance',
+        'difference'
     ];
 
 
@@ -30,5 +32,20 @@ class Shifts extends Model
     public function store()
     {
         return $this->belongsTo(Stores::class);
+    }
+    
+    public function safe()
+    {
+        return $this->belongsTo(Safes::class);
+    }
+    
+    public function invoices()
+    {
+        return $this->hasMany(SalesInvoice::class);
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(SafeTransaction::class, 'shift_id');
     }
 }

@@ -74,10 +74,12 @@ Route::middleware('auth:web')->group(function () {
 
     Route::prefix('shifts')->name('shifts.')->group(function () {
       Route::get('/', [ShiftsController::class, 'index'])->name('index');
-      Route::post('close', [ShiftsController::class, 'close'])->name('close');
+      Route::post('close/{shift}', [ShiftsController::class, 'close'])->name('close');
+      // Route::get('/test', [ShiftsController::class, 'close'])->name('test');
+
     });
-
-
+    
+    
     Route::get('invoice_number', [SalesInvoiceController::class, 'generateInvoiceNumber']);
 
 });

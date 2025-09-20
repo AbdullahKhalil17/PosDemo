@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('shifts', function (Blueprint $table) {
-            $table->decimal('actual_balance', 10, 2)->nullable()->after('closing_balance');
+            $table->decimal('difference', 12, 2)->nullable()->after('actual_balance');
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('shifts', function (Blueprint $table) {
-            $table->dropColumn('actual_balance');
+            //
         });
     }
 };

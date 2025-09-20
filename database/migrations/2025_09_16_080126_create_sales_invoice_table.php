@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('invoice_number', 255);
             $table->date('invoice_date');
             $table->decimal('total_invoice', 12, 2)->default(0);
+            $table->enum('payment_method', ['cash', 'visa', 'online'])->default('cash');
             $table->string('note');
             $table->timestamps();
         });

@@ -15,10 +15,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('store_id')->constrained()->onDelete('cascade');
-            $table->timestamp('start_time');   // بداية الشيفت
+            $table->foreignId('safe_id')->nullable()->constrained('safes')->onDelete('cascade');
+            $table->timestamp('start_time');
             $table->timestamp('end_time')->nullable();
             $table->decimal('opening_balance', 12, 2)->default(0);
             $table->decimal('closing_balance', 12, 2)->nullable();
+            $table->decimal('actual_balance', 10, 2)->nullable();
             $table->timestamps();
         });
     }
