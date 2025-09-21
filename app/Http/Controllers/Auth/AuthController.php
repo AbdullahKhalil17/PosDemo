@@ -39,7 +39,6 @@ class AuthController extends Controller
             }
 
             $openShift = Shifts::where('user_id', $user->id)->whereNull('end_time')->first();
-            
             // check shift
             if ($openShift) {
               if ($openShift->store_id != $request->input('store_id')) {

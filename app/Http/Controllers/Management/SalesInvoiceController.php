@@ -3,18 +3,19 @@
 namespace App\Http\Controllers\Management;
 
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Shifts;
 use App\Models\Stocks;
 use App\Models\Stores;
 use App\Models\Products;
 use App\Models\SalesInvoice;
 use Illuminate\Http\Request;
-use Faker\Provider\ar_EG\Payment;
 use App\Models\SafeTransaction;
+use Faker\Provider\ar_EG\Payment;
 use Illuminate\Support\Facades\DB;
 use App\Models\SalesInvoiceDetails;
-use Illuminate\Support\Facades\Log;
 // use App\Http\Traits\NetworkHelperTrait;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -25,8 +26,9 @@ class SalesInvoiceController extends Controller
     
     public function index()
     {
-      $store = Stores::select('id', 'name')->get();
-      // $invoiceNumber = $this->generateInvoiceNumber();
+      $store = Shifts::where('user_id', auth()->id())->whereNull('end_time')->with(['store' => function ($query) {
+        $query->select('id', 'name');
+      }])->first();
 
       return view('sales-invoice.index', compact('store'));
     }
@@ -54,8 +56,8 @@ class SalesInvoiceController extends Controller
         if (!$stock) {
             return response()->json([
                 'error' => true,
-                'message' => 'لا يوجد ستوك لهذا المنتج في فرعك'
-            ]);
+                'message' => 'لا يوجد ستوك لهذا المنتج في فرعك',
+            ], 404);
         }
 
         $totalCost = $stock->quantity * $stock->product->purchase_price;

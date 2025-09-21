@@ -31,7 +31,7 @@ class Shifts extends Model
 
     public function store()
     {
-        return $this->belongsTo(Stores::class);
+        return $this->belongsTo(Stores::class, 'store_id');
     }
     
     public function safe()

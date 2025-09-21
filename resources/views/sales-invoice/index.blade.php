@@ -37,14 +37,8 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="purchase_store">مخزن المبيعات</label>
-                                    <select name="store_id" id="purchase_store" class="custom-select" required>
-                                        <option disabled value="">اختار المخزن</option>
-                                        @foreach ($store as $item)
-                                            <option value="{{ $item->id }}">
-                                                {{ $item->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <input type="hidden" name="store_id" value="{{ $store->store->id }}" readonly>
+                                    <input type="text" value="{{ $store->store->name }}" class="form-control" readonly>
                                     @error('store_id')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
@@ -197,12 +191,12 @@
                         quantity: rowQuantity,
                         _token: '{{ csrf_token() }}'
                     },
-                    success: function(response) {
-                        console.log('تم إعادة المخزون للمنتج');
-                    },
-                    error: function(xhr) {
-                        console.log('خطأ في إعادة المخزون');
-                    }
+                    // success: function(response) {
+                    //     console.log('تم إعادة المخزون للمنتج');
+                    // },
+                    // error: function(xhr) {
+                    //     console.log('خطأ في إعادة المخزون');
+                    // }
                 });
 
                 row.remove();
@@ -316,9 +310,10 @@
                                 }
                             });
                         },
-                        error: function(xhr) {
+                        error: function(xhr, status, error) {
                             let response = xhr.responseJSON;
                             $("#error").text(response.message);
+
                         }
                     });
                 }, 1000);
