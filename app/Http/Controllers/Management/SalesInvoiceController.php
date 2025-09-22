@@ -204,16 +204,12 @@ class SalesInvoiceController extends Controller
                     'amount' => $invoice->total_invoice,
                     'note' => 'فاتورة رقم ' . $invoice->invoice_number,
                 ]);
-
+                
                 DB::commit();
                 return back()->with('success', 'تم حفظ الفاتورة بنجاح.');
-
             } catch (\Exception $e) {
                 DB::rollBack();
-                // return back()->with('error', 'حدث خطأ غير متوقع أثناء حفظ الفاتورة. برجاء المحاولة مرة أخرى.');
-
-
-                return back()->with('error', $e->getMessage());
+                return back()->with('error', 'حدث خطأ غير متوقع أثناء حفظ الفاتورة. برجاء المحاولة مرة أخرى.');
             }
         } else {
             $data = $request->all();

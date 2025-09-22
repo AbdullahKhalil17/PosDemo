@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Shifts;
 use App\Models\Stocks;
 use App\Models\SalesInvoice;
+use App\Models\SafeTransaction;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Models\SalesInvoiceDetails;
@@ -76,29 +77,6 @@ class SyncInvoices extends Command
                 'total' => $total,
               ]);
 
-              // $stocks = Stocks::where('product_id', $productId)
-              //     ->where('store_id', $data['store_id'])
-              //     ->where('quantity', '>', 0)
-              //     ->orderBy('id')
-              //     ->get();
-
-              // $remainingQuantity = $quantity;
-              // foreach ($stocks as $stock) {
-              //     if ($stock->quantity >= $remainingQuantity) {
-              //         $stock->quantity -= $remainingQuantity;
-              //         $stock->save();
-              //         $remainingQuantity = 0;
-              //         break;
-              //     } else {
-              //         $remainingQuantity -= $stock->quantity;
-              //         $stock->quantity = 0;
-              //         $stock->save();
-              //     }
-              // }
-
-              // if ($remainingQuantity > 0) {
-              //     throw new \Exception("كمية غير كافية للمنتج رقم {$productId}.");
-              // }
             }
 
             $shift = Shifts::where('user_id', $data['user_id'])
@@ -110,6 +88,17 @@ class SyncInvoices extends Command
               $shift->actual_balance += $invoice->total_invoice;
               $shift->save();
             }
+
+            SafeTransaction::create([
+                'safe_id' => $shift->safe_id,
+                'shift_id' => $shift->id,
+                'invoice_id' => $invoice->id,
+                'user_id' => $data['user_id'],
+                'transaction_type' => 'in',
+                'payment_method' => $data['payment_method'],
+                'amount' => $data['total_invoice'],
+                'note' => 'فاتورة رقم ' . $data['invoice_number'],
+            ]);
 
             DB::commit();
               $this->info("تم مزامنة الفاتورة رقم {$data['invoice_number']} بنجاح.");
