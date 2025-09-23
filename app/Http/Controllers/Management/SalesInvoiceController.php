@@ -2,20 +2,14 @@
 
 namespace App\Http\Controllers\Management;
 
-use Carbon\Carbon;
-use App\Models\User;
 use App\Models\Shifts;
 use App\Models\Stocks;
-use App\Models\Stores;
 use App\Models\Products;
 use App\Models\SalesInvoice;
 use Illuminate\Http\Request;
 use App\Models\SafeTransaction;
-use Faker\Provider\ar_EG\Payment;
 use Illuminate\Support\Facades\DB;
 use App\Models\SalesInvoiceDetails;
-// use App\Http\Traits\NetworkHelperTrait;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -166,6 +160,7 @@ class SalesInvoiceController extends Controller
                     'invoice_number'=> $request->invoice_number,
                     'invoice_date' => $request->invoice_date,
                     'total_invoice' => $request->total_invoice,
+                    'payment_method' => $request->payment_method,
                     'note' => $request->note,
                 ]);
 
@@ -240,7 +235,6 @@ class SalesInvoiceController extends Controller
 
         return response()->json([
           'status' => true,
-          // 'data' => $data,
           'sale_price' => $product->sale_price,
           'purchase_price' => $product->purchase_price,
         ]);
