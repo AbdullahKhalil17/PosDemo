@@ -2,20 +2,14 @@
 
 namespace App\Http\Controllers\Management;
 
-use Carbon\Carbon;
-use App\Models\User;
 use App\Models\Shifts;
 use App\Models\Stocks;
-use App\Models\Stores;
 use App\Models\Products;
 use App\Models\SalesInvoice;
 use Illuminate\Http\Request;
 use App\Models\SafeTransaction;
-use Faker\Provider\ar_EG\Payment;
 use Illuminate\Support\Facades\DB;
 use App\Models\SalesInvoiceDetails;
-// use App\Http\Traits\NetworkHelperTrait;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -166,6 +160,7 @@ class SalesInvoiceController extends Controller
                     'invoice_number'=> $request->invoice_number,
                     'invoice_date' => $request->invoice_date,
                     'total_invoice' => $request->total_invoice,
+                    'payment_method' => $request->payment_method,
                     'note' => $request->note,
                 ]);
 
@@ -184,29 +179,34 @@ class SalesInvoiceController extends Controller
                     ]);
                     
                 }
+                //check payment method
+                if($request->payment_method == 'cash') {
+                    $shift = Shifts::where('user_id', auth()->id())
+                    ->where('store_id', $request->store_id)
+                    ->whereNull('end_time')
+                    ->first();
 
-                  $shift = Shifts::where('user_id', auth()->id())
-                  ->where('store_id', $request->store_id)
-                  ->whereNull('end_time')
-                  ->first();
+                    $shift->actual_balance += $invoice->total_invoice;
+                    $shift->save();
 
-                  $shift->actual_balance += $invoice->total_invoice;
-                  $shift->save();
-
-
-                SafeTransaction::create([
-                    'safe_id' => $shift->safe_id,
-                    'shift_id' => $shift->id,
-                    'invoice_id' => $invoice->id,
-                    'user_id' => auth()->id(),
-                    'transaction_type' => 'in',
-                    'payment_method' => $request->payment_method,
-                    'amount' => $invoice->total_invoice,
-                    'note' => 'فاتورة رقم ' . $invoice->invoice_number,
-                ]);
-                
+                  SafeTransaction::create([
+                      'safe_id' => $shift->safe_id,
+                      'shift_id' => $shift->id,
+                      'invoice_id' => $invoice->id,
+                      'user_id' => auth()->id(),
+                      'transaction_type' => 'in',
+                      'payment_method' => $request->payment_method,
+                      'amount' => $invoice->total_invoice,
+                      'note' => 'فاتورة رقم ' . $invoice->invoice_number,
+                  ]);
+                }
                 DB::commit();
-                return back()->with('success', 'تم حفظ الفاتورة بنجاح.');
+                // return back()->with('success', 'تم حفظ الفاتورة بنجاح.');
+                if ($invoice->payment_method === 'visa') {
+            return redirect()->route('pay.intintionPay', $invoice->id);
+        }
+
+        return redirect()->route('purchaseInvoice.index')->with('success', 'تم حفظ الفاتورة بنجاح');
             } catch (\Exception $e) {
                 DB::rollBack();
                 return back()->with('error', 'حدث خطأ غير متوقع أثناء حفظ الفاتورة. برجاء المحاولة مرة أخرى.');
@@ -240,7 +240,6 @@ class SalesInvoiceController extends Controller
 
         return response()->json([
           'status' => true,
-          // 'data' => $data,
           'sale_price' => $product->sale_price,
           'purchase_price' => $product->purchase_price,
         ]);

@@ -115,7 +115,7 @@ class PurchaseInvoiceController extends Controller
         $invoice->save();
 
 
-        $payInvoice = Shifts::where('user_id', auth()->id())->first();
+        $payInvoice = Shifts::where('user_id', auth()->id())->whereNull('end_time')->first();
         $payInvoice->actual_balance -=$totalInvoiceAmount;
         $payInvoice->save();
 
