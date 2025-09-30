@@ -8,6 +8,7 @@ use App\Http\Controllers\Management\PurchaseInvoiceController;
 use App\Http\Controllers\Management\SalesInvoiceController;
 use App\Http\Controllers\Management\ShiftsController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Management\PayMobController;
 
 /*
 |--------------------------------------------------------------------------
@@ -80,6 +81,16 @@ Route::middleware('auth:web')->group(function () {
     });
     
     
-    Route::get('invoice_number', [SalesInvoiceController::class, 'generateInvoiceNumber']);
+    // Route::get('invoice_number', [SalesInvoiceController::class, 'generateInvoiceNumber']);
+
+    Route::prefix('pay')->name('pay.')->group(function () {
+      // Route::get('de/{invoice}', [PayMobController::class, 'getInvoiceDetalies'])->name('detalies');
+      Route::get('intintion/{invoice}', [PayMobController::class, 'intintionPay'])->name('intintionPay');
+      Route::get('payment/confirmation', [PayMobController::class, 'paymentConfirmation'])->name('confirmation');
+    });
+
+    
 
 });
+// Public webhook routes (outside authentication)
+    Route::post('pay/paymob/webhook', [PayMobController::class, 'handlePaymobWebhook'])->name('paymob.webhook');

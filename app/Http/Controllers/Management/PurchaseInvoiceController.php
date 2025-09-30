@@ -11,6 +11,7 @@ use App\Models\PurchaseInvoice;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\PurchaseInvoiceDetails;
+use App\Models\Safes;
 use Illuminate\Database\Events\TransactionBeginning;
 
 class PurchaseInvoiceController extends Controller
@@ -115,8 +116,8 @@ class PurchaseInvoiceController extends Controller
         $invoice->save();
 
 
-        $payInvoice = Shifts::where('user_id', auth()->id())->first();
-        $payInvoice->actual_balance -=$totalInvoiceAmount;
+        $payInvoice = Safes::where('store_id', $request->input('store_id'))->first();
+        $payInvoice->balance -=$totalInvoiceAmount;
         $payInvoice->save();
 
         DB::commit();

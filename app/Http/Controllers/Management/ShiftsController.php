@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Management;
 use App\Models\Shifts;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Safes;
 use Illuminate\Support\Facades\Auth;
 
 class ShiftsController extends Controller
@@ -13,7 +14,6 @@ class ShiftsController extends Controller
     {
       $shift = Shifts::with('user')->where('user_id', auth()->id())
         ->whereNull('end_time')->first();
-      // return $shift;
       return view('shifts.close-shift', compact('shift'));
     }
 
@@ -41,6 +41,10 @@ class ShiftsController extends Controller
           'closing_balance' => $balanceUser,
           'difference' => $difference
         ]);
+
+        $safe = Safes::find($shift->safe_id);
+        $safe->balance += $balanceUser;
+        $safe->save();
 
         if($difference == 0 ){ 
           $message = "تم إغلاق الشيفت بنجاح";
