@@ -203,8 +203,8 @@ class SalesInvoiceController extends Controller
                 DB::commit();
                 // return back()->with('success', 'تم حفظ الفاتورة بنجاح.');
                 if ($invoice->payment_method === 'visa') {
-            return redirect()->route('pay.intintionPay', $invoice->id);
-        }
+                    return redirect()->route('pay.intintionPay', $invoice->id);
+                }
 
         return redirect()->route('purchaseInvoice.index')->with('success', 'تم حفظ الفاتورة بنجاح');
             } catch (\Exception $e) {
